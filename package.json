@@ -1,0 +1,26 @@
+{
+  "name": "blog-api-with-mongoose",
+  "version": "1.0.0",
+  "description": "Challenge: Add Mongoose to Blogging App for Thinkful curriculum",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "mocha --exit"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.16.3",
+    "mongoose": "^5.0.17",
+    "morgan": "^1.9.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mee213/blog-api-with-mongoose"
+  },
+  "devDependencies": {
+    "chai": "^4.1.2",
+    "chai-http": "^4.0.0",
+    "mocha": "^5.1.1"
+  }
+}
