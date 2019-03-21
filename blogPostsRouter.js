@@ -3,7 +3,7 @@ const router = express.Router();
 
 router.use(express.json());
 
-const {BlogPost} = require('./models');
+const {Author, BlogPost} = require('./models');
 
 // send back JSON representation of all blog posts
 // on GET requests to root
@@ -11,13 +11,16 @@ router.get('/', (req, res) => {
   BlogPost
     .find()
     // success callback: for each blog post we got back, we'll
-    // call the `.serialize` instance method we've created in
-    // models.js in order to only expose the data we want the API return.
+    // map only the data we want the API to return.
     .then(blogposts => {
-      res.json({
-        blogposts: blogposts.map(
-          (blogpost) => blogpost.serialize())
-      });
+      res.json(blogposts.map(blogpost => {
+        return {
+          title: blogpost.title,
+          content: blogpost.content,
+          author: blogpost.authorFullName,
+          created: blogpost.created
+        };
+      }));
     })
     .catch(err => {
       console.error(err);
@@ -44,7 +47,7 @@ router.get('/:id', (req, res) => {
 // if okay, add new blog post, and return it with a status 201.
 router.post('/', (req, res) => {
 
-  const requiredFields = ['title', 'content', 'author'];
+  const requiredFields = ['title', 'content', 'author_id'];
   for (let i = 0; i < requiredFields.length; i++) {
     const field = requiredFields[i];
     if (!(field in req.body)) {
@@ -54,13 +57,34 @@ router.post('/', (req, res) => {
     }
   }
 
-  BlogPost
-    .create({
-      title: req.body.title,
-      content: req.body.content,
-      author: req.body.author
+  Author
+    .findById(req.body.author_id)
+    .then(author => {
+      if (author) {
+        BlogPost
+          .create({
+            title: req.body.title,
+            content: req.body.content,
+            author: req.body.author_id
+          })
+          .then(blogpost => res.status(201).json({
+            id: blogpost._id,
+            title: blogpost.title,
+            content: blogpost.content,
+            author: `${author.firstName} ${author.lastName}`.trim(),
+            created: blogpost.created,
+            comments: blogpost.comments
+          }))
+          .catch(err => {
+            console.error(err);
+            res.status(500).json({ message: 'Internal server error' });
+          });
+      } else {
+        const message = `Author not found`;
+        console.error(message);
+        return res.status(400).send(message);
+      }
     })
-    .then(blogpost => res.status(201).json(blogpost.serialize()))
     .catch(err => {
       console.error(err);
       res.status(500).json({ message: 'Internal server error' });
@@ -86,7 +110,7 @@ router.put('/:id', (req, res) => {
   // if the user sent over any of the updatableFields, we udpate those values
   // in document
   const toUpdate = {};
-  const updateableFields = ['title', 'content', 'author'];
+  const updateableFields = ['title', 'content'];
 
   updateableFields.forEach(field => {
     if (field in req.body) {
@@ -97,7 +121,12 @@ router.put('/:id', (req, res) => {
   BlogPost
     // all key/value pairs in toUpdate will be updated -- that's what `$set` does
     .findByIdAndUpdate(req.params.id, { $set: toUpdate }, {new: true})
-    .then(updatedPost => res.status(200).json(updatedPost.serialize()))
+    .then(updatedPost => res.status(200).json({
+        title: updatedPost.title,
+        content: updatedPost.content,
+        author: updatedPost.authorFullName,
+        created: updatedPost.created
+    }))
     .catch(err => res.status(500).json({ message: 'Internal server error' }));
 });
 

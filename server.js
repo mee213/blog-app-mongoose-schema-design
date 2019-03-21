@@ -15,6 +15,7 @@ const { PORT, DATABASE_URL } = require('./config');
 const app = express();
 
 const blogPostsRouter = require('./blogPostsRouter');
+const authorsRouter = require('./authorsRouter');
 
 // log the http layer
 app.use(morgan('common'));
@@ -31,6 +32,7 @@ app.get('/', (req, res) => {
 */
 
 app.use('/posts', blogPostsRouter);
+app.use('/authors', authorsRouter);
 
 // both runServer and closeServer need to access the same
 // server object, so we declare `server` here, and then when
